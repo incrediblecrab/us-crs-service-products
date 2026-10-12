@@ -332,15 +332,15 @@ def crons(name):
 
 
 def test_every_schedule_is_what_the_code_and_cards_say():
-    # The owner asked on September 26, 2026 for every dataset to update at 00:00 and 12:00 UTC.
+    # The owner asked on October 12, 2026 for every dataset to update once a day at 9:00 EST, 14:00 UTC (until then, September 26, 2026: 00:00 and 12:00 UTC).
     for name in DATASETS:
-        assert crons(name) == ["0 0,12 * * *"], name
-    assert summaries.SCHEDULE_HOURS == 12
+        assert crons(name) == ["0 14 * * *"], name
+    assert summaries.SCHEDULE_HOURS == 24
     # The daily check keeps to one slot: the run a day later is due, the one before it is not.
     assert 24 - summaries.SCHEDULE_HOURS < summaries.RECONCILE_HOURS < 24
     for dataset in DATASETS.values():
         text = cli.card_of(dataset)({})
-        assert "scheduled at 00:00 and 12:00 UTC" in text or f"every {summaries.SCHEDULE_HOURS} hours, at 00:00 and 12:00 UTC" in text, dataset
+        assert "scheduled at 14:00 UTC (9:00 EST, 10:00 EDT)" in text or f"every {summaries.SCHEDULE_HOURS} hours, at 14:00 UTC" in text, dataset
         assert not re.search(r"every 5 minutes|every 6 hours|once a week|weekly", text), dataset
 
 
@@ -373,9 +373,9 @@ def test_inactivity_runs_on_every_schedule_and_fails_from_50_idle_days_without_c
     git("checkout", "-q", "--force", "-B", "main", "refs/remotes/origin/main", cwd=work)
     assert git("rev-parse", "--is-shallow-repository", cwd=work).strip() == "true"
 
-    done = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=work, env={**env, "SCHEDULE": "0 0,12 * * *"}, capture_output=True, text=True)
+    done = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=work, env={**env, "SCHEDULE": "0 14 * * *"}, capture_output=True, text=True)
     assert done.returncode == (1 if fails else 0), done.stdout + done.stderr
-    assert "schedule: 0 0,12 * * *" in done.stdout
+    assert "schedule: 0 14 * * *" in done.stdout
     assert f"last commit {idle_days} days ago" in done.stdout
     errors = [line for line in done.stdout.splitlines() if line.startswith("::error::")]
     assert bool(errors) == fails

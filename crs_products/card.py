@@ -128,7 +128,7 @@ def render(manifest):
         "",
         "## How it stays current",
         "",
-        "A GitHub Actions job is scheduled at 00:00 and 12:00 UTC. It asks the API for its product count and its most recently updated product: one request. When either changed, or the last full listing is a day old, the job lists every product and fetches the ones that are new or whose `updateDate` changed, removes the ones the API no longer has, and commits the changed partitions with this card. A job that runs out of time while still fetching starts the next one itself.",
+        "A GitHub Actions job is scheduled at 14:00 UTC (9:00 EST, 10:00 EDT). It asks the API for its product count and its most recently updated product: one request. When either changed, or the last full listing is a day old, the job lists every product and fetches the ones that are new or whose `updateDate` changed, removes the ones the API no longer has, and commits the changed partitions with this card. A job that runs out of time while still fetching starts the next one itself.",
         "",
         "A product whose `updateDate` changed while its record and text did not keeps its row, its partition is not rewritten, and `manifest.json` records the new `updateDate`, so the product is not fetched again until its `updateDate` next changes. Congress.gov re-stamps some products about every hour without changing them: on September 25, 2026, 26 of 26 such re-fetches of 13 products returned the same record and the same PDF or HTML file, 3 of them with topics in another order, and each rewrite of their 10 partitions added about 100 MB to this repository's history.",
         "",

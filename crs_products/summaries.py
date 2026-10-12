@@ -34,9 +34,9 @@ EPOCH = "1900-01-01T00:00:00Z"
 # Each run reads again what changed this long before the last run's newest updateDate.
 OVERLAP_HOURS = 48
 # How often .github/workflows/summaries.yml runs (its cron says the same; a test checks).
-SCHEDULE_HOURS = 12
-# The daily check runs on the first run this long after the last one: under 24 hours and over 24 - SCHEDULE_HOURS, so it keeps to one slot of the schedule instead of slipping to the next whenever GitHub starts a run a little earlier than the day before.
-RECONCILE_HOURS = 20
+SCHEDULE_HOURS = 24
+# The daily check runs on the first run this long after the last one: under 24 hours and over 24 - SCHEDULE_HOURS, so it keeps to one slot of the schedule. With one run a day it is well under 24 hours, because GitHub starts scheduled runs hours late by varying amounts, and a run that started less than a day after the one before must still check.
+RECONCILE_HOURS = 12
 # Each daily reconciliation also reads again the slices read longest ago, so every slice is read in full at least this often.
 RESYNC_DAYS = 30
 # (sort, limit, first offset) orders for one second's items. Inside one second of /summaries/100/hr (1,391 summaries at 2015-10-01T15:15:02Z) the first four together read all 1,391 in 23 requests, where any one alone read 1,100 to 1,380 (measured September 25, 2026).
