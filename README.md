@@ -2,9 +2,9 @@
 
 This repository builds and updates three public Hugging Face datasets of work by the Congressional Research Service (CRS), the research service of the United States Congress. Each dataset card shows how much it holds.
 
-- [crs-research-papers](https://huggingface.co/datasets/incrediblecrab/crs-research-papers): every CRS product the Congress.gov API lists, active and archived, with full text.
-- [crs-bill-summaries](https://huggingface.co/datasets/incrediblecrab/crs-bill-summaries): every CRS summary of a bill or resolution of the US Congress that the API lists, from 1973 on.
-- [crs-constitution](https://huggingface.co/datasets/incrediblecrab/crs-constitution): the printed editions and supplements of the Constitution Annotated, CRS's analysis of the US Constitution, on GovInfo, with text.
+- [us-crs-research-papers](https://huggingface.co/datasets/incrediblecrab/us-crs-research-papers): every CRS product the Congress.gov API lists, active and archived, with full text.
+- [us-crs-bill-summaries](https://huggingface.co/datasets/incrediblecrab/us-crs-bill-summaries): every CRS summary of a bill or resolution of the US Congress that the API lists, from 1973 on.
+- [us-crs-constitution](https://huggingface.co/datasets/incrediblecrab/us-crs-constitution): the printed editions and supplements of the Constitution Annotated, CRS's analysis of the US Constitution, on GovInfo, with text.
 
 **Objective:** keep each dataset complete and current with no person, personal device or local copy. The workflows run on GitHub Actions at 00:00 and 12:00 UTC and write through Hugging Face Trusted Publishing, so no token is stored. GitHub disables schedules after 60 days without repository activity, such as a commit.
 
