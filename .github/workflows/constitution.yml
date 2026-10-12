@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Fetching all 495 units again, as after GovInfo restamps every package, took 20.6 minutes from a laptop on September 25, 2026; the 120-minute budget leaves room for a slower GovInfo, and the timeout adds setup and the final commit.
     timeout-minutes: 150
     permissions:

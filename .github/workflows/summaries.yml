@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Above the CLI's default budget, one slice read past it, setup and the final commit; GitHub stops any job at 360.
     timeout-minutes: 350
     permissions:
@@ -68,7 +68,7 @@ jobs:
   continue:
     needs: sync
     if: ${{ !inputs.args && needs.sync.outputs.more == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       actions: write
