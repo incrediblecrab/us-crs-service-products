@@ -9,7 +9,7 @@ from .store import SCHEMA
 from .source import listing_problem
 from .verify import TOLERANCE_MIN
 
-GITHUB = "https://github.com/incrediblecrab/crs-service-products"
+GITHUB = "https://github.com/incrediblecrab/us-crs-service-products"
 REPO_ID = "incrediblecrab/crs-research-papers"
 COLUMN_DOCS = {
     "id": "CRS product number, for example R49359, IN12740 or 98-684",

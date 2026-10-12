@@ -1,4 +1,4 @@
-# crs-service-products
+# us-crs-service-products
 
 This repository builds and updates three public Hugging Face datasets of work by the Congressional Research Service (CRS), the research service of the United States Congress. Each dataset card shows how much it holds.
 
