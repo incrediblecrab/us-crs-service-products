@@ -15,6 +15,6 @@ Offline tests: `pip install '.[test]'`, then `python -m pytest -q`. No network o
 - `test_constitution.py`: Constitution Annotated ids, listing, rows, a sync.
 - `test_http.py`: pacing, challenges, quota exhaustion, missing keys, outages.
 - `test_store.py`: partition keys, Parquet round trips, an empty partition written without a row group, the commit fence and which failures it retries, no scratch left behind.
-- `test_verify.py`: each planted data defect is named; exit 1.
+- `test_verify.py`: each planted data defect is named; exit 1. An unreconciled listing is read again after each wait and, if it never reconciles, leaves the last complete sync in place.
 - `test_card.py`: the products card's front matter and numbers.
 - `test_cli.py`: exit codes, `$GITHUB_OUTPUT`, Trusted Publishing, dataset routing, and every workflow's commands, options, outputs and schedule.

@@ -12,7 +12,7 @@ from huggingface_hub.errors import HfHubHTTPError
 
 from . import constitution, summaries
 from .http import Fetcher, QuotaExhausted, Unavailable
-from .pipeline import CLEAN_STOPS, PROBE_KEY, PROBE_STATE_VERSION, Context, decide, probe_state, sync, utcnow, writer_identity
+from .pipeline import CLEAN_STOPS, LISTING_WAITS, PROBE_KEY, PROBE_STATE_VERSION, Context, decide, probe_state, sync, utcnow, writer_identity
 from .source import CrsSource
 from .store import CARD, SQUASH_AFTER_COMMITS
 
@@ -85,7 +85,7 @@ def cmd_run(args):
         ctx = Context(store=store, deadline=deadline, only=only, max_units=args.max_units, refetch=args.refetch, partition_of=constitution.partition_of, comparable=constitution.comparable, source_url=constitution.SOURCE_URL)
         runner, source = sync, constitution.ConanSource(fetcher)
     else:
-        ctx = Context(store=store, deadline=deadline, only=only, max_units=args.max_units, refetch=args.refetch)
+        ctx = Context(store=store, deadline=deadline, only=only, max_units=args.max_units, refetch=args.refetch, listing_waits=LISTING_WAITS)
         runner, source = sync, CrsSource(fetcher)
     try:
         run = runner(ctx, source)

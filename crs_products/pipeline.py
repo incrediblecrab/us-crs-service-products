@@ -30,6 +30,8 @@ RETRY_AFTER_HOURS = 24
 # A stored product without text (no rendition answered with any) is fetched again after this long.
 TEXT_RETRY_HOURS = 7 * 24
 LEASE_MINUTES = 45
+# Seconds a scheduled products run waits before each further read of a listing that did not reconcile. Congress.gov's listing failed to reconcile in all three passes of the runs that started at 18:14 UTC on October 6, 20:09 UTC on October 13 and 18:09 UTC on October 15, 2026, and in a second read 4 minutes later on October 15; a read at 19:45 UTC that day reconciled 14,185 of 14,185. With one scheduled run a day, a run that gave up at once left the dataset a day behind.
+LISTING_WAITS = (15 * 60,) * 6
 RUNS_KEPT = 20
 # A listing that would remove more than this share of a stored partition is treated as an upstream glitch, not a deletion.
 MAX_REMOVED_SHARE = 0.5
@@ -89,7 +91,7 @@ class Partition:
 
 @dataclass
 class Context:
-    """deadline is a time.monotonic() value. only (partition keys) and max_units (products fetched per partition) bound a smoke run; a capped partition stays incomplete and resumes on the next run. refetch fetches every product of each partition the run reaches, as after a parser change. partition_of, comparable (None: this module's comparable) and source_url default to the products'; another dataset synced by this loop passes its own."""
+    """deadline is a time.monotonic() value. only (partition keys) and max_units (products fetched per partition) bound a smoke run; a capped partition stays incomplete and resumes on the next run. refetch fetches every product of each partition the run reaches, as after a parser change. listing_waits: seconds to wait before each further read of a listing that did not reconcile, within the deadline (none by default; see LISTING_WAITS). partition_of, comparable (None: this module's comparable) and source_url default to the products'; another dataset synced by this loop passes its own."""
 
     store: object
     deadline: float
@@ -97,6 +99,7 @@ class Context:
     only: frozenset | None = None
     max_units: int | None = None
     refetch: bool = False
+    listing_waits: tuple = ()
     writer: str = field(default_factory=writer_identity)
     partition_of: object = partition_of
     comparable: object = None
@@ -232,7 +235,15 @@ def sync(ctx, source):
     finished, reason, listing, warnings = True, None, None, []
     try:
         head, items = source.list_all()
-        manifest["source_listing"] = dict(listing_summary(head, items), at=started)
+        reads = 1
+        for wait in ctx.listing_waits:
+            if not listing_problem(listing_summary(head, items)) or time.monotonic() + wait > ctx.deadline:
+                break
+            log.warning("%s; reading the listing again in %d minutes (read %d of %d)", listing_problem(listing_summary(head, items)), wait // 60, reads + 1, len(ctx.listing_waits) + 1)
+            time.sleep(wait)
+            head, items = source.list_all()
+            reads += 1
+        manifest["source_listing"] = dict(listing_summary(head, items), at=started, reads=reads)
         problem = listing_problem(manifest["source_listing"])
         if problem:
             raise IncompleteListing(problem)

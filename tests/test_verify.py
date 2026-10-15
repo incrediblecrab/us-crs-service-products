@@ -1,6 +1,7 @@
 """verify: a synced store passes, each planted defect is named, and the command exits 1 when one is."""
 
 import json
+import math
 import os
 import subprocess
 import sys
@@ -10,8 +11,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
+from crs_products import cli, pipeline
 from crs_products import verify as verify_module
-from crs_products.pipeline import MAX_ATTEMPTS
+from crs_products.pipeline import MAX_ATTEMPTS, Context, sync
 from crs_products.store import SCHEMA, normalize, partition_path, sha256_file, write_parquet
 from crs_products.verify import verify
 from conftest import ScriptedSource, local_store, run_once, scripted
@@ -162,6 +164,68 @@ def test_a_recovered_listing_clears_degraded_status_even_without_data_changes(sy
     assert run["finished"] and run["commits"] > 0
     assert store.read_manifest()["source_listing"]["complete"] is True
     assert "**Degraded:**" not in store.read_text("README.md")
+
+
+class Unreconciled(ScriptedSource):
+    """Advertises one product more than it lists for its first bad_reads listings, as Congress.gov's listing did for minutes at a time on October 15, 2026."""
+
+    def __init__(self, state, bad_reads):
+        super().__init__(state)
+        self.bad_reads, self.reads = bad_reads, 0
+
+    def list_all(self):
+        self.reads += 1
+        head, items = super().list_all()
+        return (dict(head, count=len(items) + 1) if self.reads <= self.bad_reads else head), items
+
+
+def sync_waiting(store, state, source, waits, deadline=None):
+    ctx = Context(store=store, deadline=math.inf if deadline is None else deadline, writer="local", listing_waits=waits)
+    state.ctx = ctx
+    return sync(ctx, source)
+
+
+def test_a_listing_that_reconciles_on_a_later_read_syncs(synced, monkeypatch):
+    store, state = synced
+    slept = []
+    monkeypatch.setattr(pipeline.time, "sleep", slept.append)
+    state.units["R40004"] = T1
+    source = Unreconciled(state, bad_reads=2)
+    run = sync_waiting(store, state, source, waits=(7, 7, 7))
+    assert run["finished"] and run["stopped"] is None and "R40004" in state.fetched
+    assert source.reads == 3 and slept == [7, 7]
+    assert store.read_manifest()["source_listing"] | {"at": None} == {"count": 5, "distinct": 5, "complete": True, "at": None, "reads": 3}
+    assert store.read_manifest()["listing"]["listed"] == 5
+
+
+def test_a_listing_that_never_reconciles_stops_after_the_last_wait(synced, monkeypatch):
+    store, state = synced
+    before = store.read_manifest()
+    slept = []
+    monkeypatch.setattr(pipeline.time, "sleep", slept.append)
+    state.fetched.clear()
+    source = Unreconciled(state, bad_reads=99)
+    run = sync_waiting(store, state, source, waits=(7, 7))
+    assert run["stopped"] == "incomplete listing" and not state.fetched
+    assert source.reads == 3 and slept == [7, 7]
+    after = store.read_manifest()
+    assert after["listing"] == before["listing"] and after["source_listing"]["complete"] is False and after["source_listing"]["reads"] == 3
+
+
+def test_no_wait_runs_past_the_deadline(synced, monkeypatch):
+    store, state = synced
+    slept = []
+    monkeypatch.setattr(pipeline.time, "sleep", slept.append)
+    source = Unreconciled(state, bad_reads=99)
+    run = sync_waiting(store, state, source, waits=(600,), deadline=pipeline.time.monotonic() + 60)
+    assert run["stopped"] == "incomplete listing" and source.reads == 1 and slept == []
+
+
+def test_the_products_run_waits_on_an_unreconciled_listing(monkeypatch, tmp_path):
+    seen = {}
+    monkeypatch.setattr(cli, "sync", lambda ctx, source: seen.setdefault("waits", ctx.listing_waits) and {"stopped": None, "finished": True, "commits": 0, "fetched": 0})
+    cli.main(["run", "--local", str(tmp_path / "hub"), "--workdir", str(tmp_path)])
+    assert seen["waits"] == pipeline.LISTING_WAITS and sum(pipeline.LISTING_WAITS) < 320 * 60 / 2
 
 
 def run_cli(*args):
