@@ -16,7 +16,7 @@ This repository builds and keeps current three public Hugging Face datasets of C
 
 ## How it stays current
 
-Three scheduled workflows run at 09:37 UTC, which GitHub starts about four hours late (`.github/workflows/README.md` has the measurement), and publish through Hugging Face Trusted Publishing with no stored token: `pipeline.yml` (products: a one-request `probe`, then `run`, `verify --live` and `squash`), `summaries.yml` and `constitution.yml`. A run that exhausts its time budget mid-fetch starts a `continue` run. GitHub disables schedules after 60 days without a commit, and the `inactivity` job fails at 50 days to warn first; it deliberately makes no keepalive commit, which GitHub treats as a Terms violation, so do not add one.
+Three scheduled workflows run at 12:37 UTC, which GitHub starts about four hours late (`.github/workflows/README.md` has the measurement), and publish through Hugging Face Trusted Publishing with no stored token: `pipeline.yml` (products: a one-request `probe`, then `run`, `verify --live` and `squash`), `summaries.yml` and `constitution.yml`. A run that exhausts its time budget mid-fetch starts a `continue` run. GitHub disables schedules after 60 days without a commit, and the `inactivity` job fails at 50 days to warn first; it deliberately makes no keepalive commit, which GitHub treats as a Terms violation, so do not add one.
 
 ## Structure
 

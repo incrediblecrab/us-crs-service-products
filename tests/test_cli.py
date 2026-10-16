@@ -332,15 +332,15 @@ def crons(name):
 
 
 def test_every_schedule_is_what_the_code_and_cards_say():
-    # The owner asked on October 12, 2026 for every dataset to update once a day at 9:00 EST, 14:00 UTC (until then, September 26, 2026: 00:00 and 12:00 UTC). GitHub started those runs about four hours late, so from October 15, 2026 they are scheduled at 09:37 UTC.
+    # The owner asked on October 12, 2026 for every dataset to update once a day at 9:00 EST, 14:00 UTC (until then, September 26, 2026: 00:00 and 12:00 UTC). GitHub started those runs about four hours late, so on October 15, 2026 they were scheduled at 09:37 UTC to start near 14:00 UTC, and the same day the owner moved the target to noon EST, so they are scheduled at 12:37 UTC.
     for name in DATASETS:
-        assert crons(name) == ["37 9 * * *"], name
+        assert crons(name) == ["37 12 * * *"], name
     assert summaries.SCHEDULE_HOURS == 24
     # The daily check keeps to one slot: the run a day later is due, the one before it is not.
     assert 24 - summaries.SCHEDULE_HOURS < summaries.RECONCILE_HOURS < 24
     for dataset in DATASETS.values():
         text = cli.card_of(dataset)({})
-        assert "at 09:37 UTC, which GitHub has been starting about four hours late, near 14:00 UTC (9:00 EST, 10:00 EDT)" in text, dataset
+        assert "at 12:37 UTC, which GitHub has been starting about four hours late, near 17:00 UTC (12:00 EST, 13:00 EDT)" in text, dataset
         assert not re.search(r"every 5 minutes|every 6 hours|once a week|weekly", text), dataset
 
 
@@ -373,9 +373,9 @@ def test_inactivity_runs_on_every_schedule_and_fails_from_50_idle_days_without_c
     git("checkout", "-q", "--force", "-B", "main", "refs/remotes/origin/main", cwd=work)
     assert git("rev-parse", "--is-shallow-repository", cwd=work).strip() == "true"
 
-    done = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=work, env={**env, "SCHEDULE": "37 9 * * *"}, capture_output=True, text=True)
+    done = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=work, env={**env, "SCHEDULE": "37 12 * * *"}, capture_output=True, text=True)
     assert done.returncode == (1 if fails else 0), done.stdout + done.stderr
-    assert "schedule: 37 9 * * *" in done.stdout
+    assert "schedule: 37 12 * * *" in done.stdout
     assert f"last commit {idle_days} days ago" in done.stdout
     errors = [line for line in done.stdout.splitlines() if line.startswith("::error::")]
     assert bool(errors) == fails
